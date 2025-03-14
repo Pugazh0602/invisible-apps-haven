@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { PinValidation } from '@/utils/types';
-import { X, Delete, Check } from 'lucide-react';
+import { PinValidation, PinOptions } from '@/utils/types';
+import { X, Delete, Check, Clock } from 'lucide-react';
 
 interface PinPadProps {
   onValidPin: () => void;
@@ -10,6 +10,7 @@ interface PinPadProps {
   expectedPin?: string; // For validation
   setPinMode?: boolean; // If true, allows setting a new PIN
   onPinSet?: (pin: string) => void;
+  pinOptions?: PinOptions; // Options for PIN validation
 }
 
 const PinPad: React.FC<PinPadProps> = ({ 
@@ -17,13 +18,15 @@ const PinPad: React.FC<PinPadProps> = ({
   onCancel, 
   expectedPin = '1234', 
   setPinMode = false,
-  onPinSet 
+  onPinSet,
+  pinOptions = {}
 }) => {
   const [pin, setPin] = useState<string>('');
   const [confirmPin, setConfirmPin] = useState<string>('');
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [showClockHint, setShowClockHint] = useState<boolean>(false);
 
   // Clear error on pin change
   useEffect(() => {
@@ -46,6 +49,13 @@ const PinPad: React.FC<PinPadProps> = ({
     } else {
       setPin(prev => prev.slice(0, -1));
     }
+  };
+
+  const getCurrentDatePin = (): string => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+    return day + year;
   };
 
   const handleSubmit = () => {
@@ -71,15 +81,25 @@ const PinPad: React.FC<PinPadProps> = ({
         }, 1000);
       }
     } else {
-      // Validate against expected PIN
-      if (pin === expectedPin) {
-        setSuccess('PIN correct');
+      // Check for clock unlock (current date in DDYY format)
+      const currentDatePin = getCurrentDatePin();
+      const isClockUnlockValid = pinOptions.clockUnlock && pin === currentDatePin;
+      
+      // Validate against expected PIN or clock unlock
+      if (pin === expectedPin || isClockUnlockValid) {
+        setSuccess(isClockUnlockValid ? 'Date unlock successful' : 'PIN correct');
         setTimeout(() => {
           onValidPin();
         }, 500);
       } else {
         setError('Incorrect PIN');
         setPin('');
+        
+        // Show clock hint after failed attempt if clock unlock is enabled
+        if (pinOptions.clockUnlock) {
+          setShowClockHint(true);
+          setTimeout(() => setShowClockHint(false), 3000);
+        }
       }
     }
   };
@@ -115,6 +135,12 @@ const PinPad: React.FC<PinPadProps> = ({
             Enter the same PIN again to confirm
           </p>
         )}
+        {pinOptions.clockUnlock && !setPinMode && (
+          <div className="flex items-center justify-center mt-2 text-xs text-vault-text/70">
+            <Clock className="w-3.5 h-3.5 mr-1.5 text-vault-primary" />
+            <span>Clock unlock available</span>
+          </div>
+        )}
       </div>
 
       {renderPinIndicator()}
@@ -130,6 +156,13 @@ const PinPad: React.FC<PinPadProps> = ({
         <div className="bg-green-500/20 text-green-300 py-2 px-3 rounded-md text-sm mb-4 flex items-center justify-center">
           <Check className="w-4 h-4 mr-2" />
           {success}
+        </div>
+      )}
+
+      {showClockHint && (
+        <div className="bg-blue-500/20 text-blue-300 py-2 px-3 rounded-md text-sm mb-4 flex items-center justify-center">
+          <Clock className="w-4 h-4 mr-2" />
+          Hint: Try today's date (DDYY)
         </div>
       )}
 

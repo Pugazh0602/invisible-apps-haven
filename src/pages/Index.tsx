@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockApps } from '@/utils/mockData';
-import { App } from '@/utils/types';
+import { App, PinOptions } from '@/utils/types';
 import Header from '@/components/layout/Header';
 import AppItem from '@/components/AppItem';
 import SearchBar from '@/components/SearchBar';
 import PinPad from '@/components/PinPad';
 import EmptyState from '@/components/EmptyState';
-import { Eye, EyeOff, Lock, Info, Shield } from 'lucide-react';
+import { Eye, EyeOff, Lock, Info, Shield, Clock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -26,6 +26,9 @@ const Index = () => {
   // Set up PIN on first launch (normally would be stored securely)
   const [hasSetPin, setHasSetPin] = useState<boolean>(false);
   const [pin, setPin] = useState<string>('1234');
+  const [pinOptions, setPinOptions] = useState<PinOptions>({
+    clockUnlock: true // Enable clock unlock by default
+  });
   
   useEffect(() => {
     // Simulate loading apps
@@ -243,6 +246,7 @@ const Index = () => {
             expectedPin={pin}
             setPinMode={!hasSetPin}
             onPinSet={handleSetPin}
+            pinOptions={pinOptions}
           />
         </DialogContent>
       </Dialog>
@@ -277,6 +281,10 @@ const Index = () => {
                 <li className="flex items-start gap-2">
                   <EyeOff className="h-4 w-4 text-vault-primary mt-0.5" />
                   <span>Hide apps from prying eyes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Clock className="h-4 w-4 text-vault-primary mt-0.5" />
+                  <span>Clock unlock using today's date (DDYY format)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-vault-primary mt-0.5" />

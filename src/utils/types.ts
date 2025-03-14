@@ -13,3 +13,7 @@ export interface PinValidation {
   isValid: boolean;
   message?: string;
 }
+
+export interface PinOptions {
+  clockUnlock?: boolean; // If true, allows unlocking with current date as PIN
+}
